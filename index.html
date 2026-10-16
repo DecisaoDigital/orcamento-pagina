@@ -33,9 +33,10 @@ tr.total td{border:0;padding-top:10px;font-weight:800;font-size:19px}
 .botoes{display:grid;gap:10px}
 button{font:inherit;font-weight:600;border-radius:12px;padding:14px;border:1px solid var(--line);background:#fff;color:var(--ink);cursor:pointer;min-height:52px}
 button.sim{background:var(--marca);border-color:var(--marca);color:#fff;font-size:17px}
-button.ligacao{border:0;background:none;color:var(--muted);text-decoration:underline;min-height:44px;font-weight:500}
+button.nao{color:var(--erro)}
+.resp{padding:10px 0;border-top:1px solid var(--line)}
+.resp:first-of-type{margin-top:10px}
 button:disabled{opacity:.6}
-textarea{width:100%;font:inherit;border:1px solid var(--line);border-radius:10px;padding:12px;min-height:96px}
 .estado{border-radius:12px;padding:14px;font-weight:600}
 .estado.ok{background:var(--okbg);color:var(--ok)}
 .estado.info{background:var(--warnbg);color:var(--warn)}
@@ -105,10 +106,6 @@ footer{text-align:center;color:var(--muted);font-size:13px;margin-top:20px}
     document.title = "Orçamento " + d.numero + " · " + e.nome;
     var partes = [];
 
-    if (d.estado_fiscal !== "certificado") {
-      partes.push(el("div", { classe: "aviso", texto: "Proposta de orçamento sem validade fiscal (versão de teste, sem ATCUD). Não constitui fatura." }));
-    }
-
     var logo = seguro(e.logo_url);
     var iniciais = (e.nome || "?").trim().split(/\s+/).slice(0, 2).map(function (p) { return p[0].toUpperCase(); }).join("");
     var m = meses(e.desde);
@@ -124,22 +121,31 @@ footer{text-align:center;color:var(--muted);font-size:13px;margin-top:20px}
       ])
     ]));
 
-    var linhas = el("tbody");
-    d.linhas.forEach(function (l) {
-      var base = Math.round(l.quantidade * l.preco);
-      linhas.appendChild(el("tr", null, [
-        el("td", null, [el("div", { texto: l.descricao }), el("div", { classe: "muted", texto: qtd(l.quantidade) + " " + l.unidade + " × " + cent(l.preco) + " · IVA " + l.iva + " %" })]),
-        el("td", { classe: "v", texto: cent(base) })
-      ]));
+    // O trabalho, como o profissional o respondeu no funil.
+    var desc = (d.respostas || []).map(function (r) {
+      return el("div", { classe: "resp" }, [el("div", { classe: "muted", texto: r.rotulo }), el("div", { texto: r.texto })]);
     });
-    linhas.appendChild(el("tr", { classe: "sub" }, [el("td", { texto: "Subtotal" }), el("td", { classe: "v", texto: eur(d.subtotal) })]));
+    partes.push(el("div", { classe: "card" }, [
+      el("h2", { texto: "Orçamento " + d.numero + (d.versao > 1 ? " · actualizado" : "") }),
+      el("div", { classe: "muted", texto: "Para " + d.cliente_nome + (d.morada_obra ? " · " + d.morada_obra : "") + " · válido até " + data(d.validade) })
+    ].concat(desc)));
+
+    var linhas = el("tbody");
+    if (d.mostrar_parcelas) (d.linhas || []).forEach(function (l) {
+      linhas.appendChild(el("tr", null, [el("td", { texto: l.descricao }), el("td", { classe: "v", texto: cent(Math.round(l.quantidade * l.preco)) })]));
+    });
+    linhas.appendChild(el("tr", { classe: "sub" }, [el("td", { texto: "Sem IVA" }), el("td", { classe: "v", texto: eur(d.subtotal) })]));
     linhas.appendChild(el("tr", { classe: "sub" }, [el("td", { texto: "IVA" }), el("td", { classe: "v", texto: eur(d.total_iva) })]));
     linhas.appendChild(el("tr", { classe: "total" }, [el("td", { texto: "Total" }), el("td", { classe: "v", texto: eur(d.total) })]));
-    partes.push(el("div", { classe: "card" }, [
-      el("h2", { texto: "Orçamento " + d.numero + (d.versao > 1 ? " · versão " + d.versao : "") }),
-      el("div", { classe: "muted", texto: "Para " + d.cliente_nome + " · válido até " + data(d.validade) }),
-      el("table", null, [linhas])
-    ]));
+    partes.push(el("div", { classe: "card" }, [el("h2", { texto: "Valores" }), el("table", null, [linhas])]));
+
+    var opc = (d.opcionais || []).filter(function (l) { return l.descricao; });
+    if (opc.length) {
+      var t = el("tbody");
+      opc.forEach(function (l) { t.appendChild(el("tr", null, [el("td", { texto: l.descricao }), el("td", { classe: "v", texto: "+ " + cent(l.preco) + " + IVA" })])); });
+      partes.push(el("div", { classe: "card" }, [el("h2", { texto: "Só se for necessário" }),
+        el("p", { classe: "muted", texto: "Não está incluído no total. Só se cobra se, durante a obra, for mesmo preciso." }), el("table", null, [t])]));
+    }
 
     var fotos = (d.fotos || []).map(seguro).filter(Boolean);
     if (fotos.length) {
@@ -159,38 +165,34 @@ footer{text-align:center;color:var(--muted);font-size:13px;margin-top:20px}
     var d = dados;
     if (d.estado === "aceite" || d.estado === "recusado") {
       return el("div", { classe: "card" }, [el("div", { classe: "estado " + (d.estado === "aceite" ? "ok" : "info"),
-        texto: (d.estado === "aceite" ? "Aceitou este orçamento" : "Indicou que não vai avançar") + " a " + hora(d.respondido_em) + " (versão " + d.resposta_versao + ")." })]);
+        texto: (d.estado === "aceite" ? "Aceitou este orçamento" : "Respondeu que não aceita este orçamento") + " a " + hora(d.respondido_em) + "." })]);
     }
     if (d.expirado) {
       return el("div", { classe: "card" }, [el("div", { classe: "estado info", texto: "Este orçamento expirou a " + data(d.validade) + ". Peça um novo a " + d.empresa.nome + "." })]);
     }
     var aviso = el("p", { classe: "erro", hidden: "" });
-    var caixa = el("textarea", { placeholder: "Escreva a sua dúvida (opcional)", maxlength: "1000" });
-    var zonaDuvida = el("div", { hidden: "" }, [caixa, el("div", { style: "height:10px" }),
-      el("button", { texto: "Enviar dúvida", onclick: function () { responder("duvidas", caixa.value, this); } })]);
     var filhos = [el("h2", { texto: "A sua resposta" })];
-    if (d.estado === "duvidas") filhos.push(el("div", { classe: "estado info", texto: "Enviou uma dúvida a " + hora(d.respondido_em) + ". Pode ainda aceitar ou responder outra vez." }), el("div", { style: "height:12px" }));
-    filhos.push(el("div", { classe: "botoes" }, [
+    if (d.estado === "pensar") filhos.push(el("div", { classe: "estado info", texto: "Disse que precisava de pensar. Quando decidir, responda aqui até " + data(d.validade) + "." }), el("div", { style: "height:12px" }));
+    var botoes = [
       el("button", { classe: "sim", texto: "Aceito", onclick: function () {
-        if (confirm("Confirma que aceita o orçamento " + d.numero + " no valor de " + eur(d.total) + "?")) responder("aceite", null, this);
-      } }),
-      el("button", { texto: "Tenho dúvidas", onclick: function () { zonaDuvida.hidden = false; caixa.focus(); } }),
-      zonaDuvida,
-      el("button", { classe: "ligacao", texto: "Não vou avançar", onclick: function () {
-        if (confirm("Confirma que não vai avançar com este orçamento?")) responder("recusado", null, this);
-      } }),
-      aviso
-    ]));
-    filhos.push(el("p", { classe: "muted", texto: "A sua resposta fica registada com a data, a hora e a versão do orçamento, e " + d.empresa.nome + " é avisado." }));
+        if (confirm("Confirma que aceita o orçamento de " + d.empresa.nome + " no valor de " + eur(d.total) + "?")) responder("aceite", this);
+      } })
+    ];
+    if (d.estado !== "pensar") botoes.push(el("button", { texto: "Preciso de pensar", onclick: function () { responder("pensar", this); } }));
+    botoes.push(el("button", { classe: "nao", texto: "Não aceito", onclick: function () {
+      if (confirm("Confirma que não aceita este orçamento?")) responder("recusado", this);
+    } }), aviso);
+    filhos.push(el("div", { classe: "botoes" }, botoes));
+    filhos.push(el("p", { classe: "muted", texto: "A sua resposta fica registada com a data e a hora, e " + d.empresa.nome + " fica a saber." }));
     var bloco = el("div", { classe: "card" }, filhos);
     bloco.aviso = aviso;
     return bloco;
   }
 
-  function responder(resposta, mensagem, botao) {
+  function responder(resposta, botao) {
     var aviso = botao.closest(".card").aviso;
     botao.disabled = true;
-    rpc("orc_publico_responder", { p_token: token, p_resposta: resposta, p_versao: dados.versao, p_mensagem: mensagem || null })
+    rpc("orc_publico_responder", { p_token: token, p_resposta: resposta, p_versao: dados.versao })
       .then(function (r) {
         dados.estado = r.estado; dados.respondido_em = r.respondido_em; dados.resposta_versao = r.versao;
         desenhar();
