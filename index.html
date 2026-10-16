@@ -96,8 +96,13 @@ footer{text-align:center;color:var(--muted);font-size:13px;margin-top:20px}
     });
   }
 
+  // Aviso legal sempre à vista, em qualquer estado da página.
+  function rodape() {
+    return el("footer", null, [el("div", { texto: "Estimativa de preço. Não dispensa a emissão de orçamento por programa de faturação certificado, quando a lei o exija." }), el("div", { texto: "Enviado com Obra feita · Decisão Digital" })]);
+  }
+
   function erroPagina(titulo, texto) {
-    app.replaceChildren(el("div", { classe: "card" }, [el("h1", { texto: titulo }), el("p", { classe: "muted", texto: texto })]));
+    app.replaceChildren(el("div", { classe: "card" }, [el("h1", { texto: titulo }), el("p", { classe: "muted", texto: texto })]), rodape());
   }
 
   function desenhar() {
@@ -157,7 +162,7 @@ footer{text-align:center;color:var(--muted);font-size:13px;margin-top:20px}
     if (d.notas) partes.push(el("div", { classe: "card" }, [el("h2", { texto: "Notas" }), el("p", { classe: "texto", texto: d.notas })]));
 
     partes.push(blocoResposta());
-    partes.push(el("footer", { texto: "Enviado com Obra feita · Decisão Digital" }));
+    partes.push(rodape());
     app.replaceChildren.apply(app, partes);
   }
 
