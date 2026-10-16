@@ -116,7 +116,7 @@ footer{text-align:center;color:var(--muted);font-size:13px;margin-top:20px}
         el("div", null, [
           el("h1", { texto: e.nome }),
           el("div", { classe: "muted", texto: [e.nif ? "NIF " + e.nif : "", e.telefone || ""].filter(Boolean).join(" · ") }),
-          el("div", { classe: "muted", texto: m < 1 ? "No Orçamento Rápido desde este mês · ainda sem avaliações" : "No Orçamento Rápido há " + m + (m === 1 ? " mês" : " meses") + " · ainda sem avaliações" })
+          el("div", { classe: "muted", texto: m < 1 ? "No Obra feita desde este mês · ainda sem avaliações" : "No Obra feita há " + m + (m === 1 ? " mês" : " meses") + " · ainda sem avaliações" })
         ])
       ])
     ]));
@@ -157,7 +157,7 @@ footer{text-align:center;color:var(--muted);font-size:13px;margin-top:20px}
     if (d.notas) partes.push(el("div", { classe: "card" }, [el("h2", { texto: "Notas" }), el("p", { classe: "texto", texto: d.notas })]));
 
     partes.push(blocoResposta());
-    partes.push(el("footer", { texto: "Enviado com Orçamento Rápido · Decisão Digital" }));
+    partes.push(el("footer", { texto: "Enviado com Obra feita · Decisão Digital" }));
     app.replaceChildren.apply(app, partes);
   }
 
