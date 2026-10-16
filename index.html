@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<title>Orçamento</title>
+<style>
+/* Página que o cliente final abre a partir do WhatsApp. Sem bibliotecas:
+   fala directamente com as duas funções públicas do Supabase. */
+:root{--bg:#f3f5f6;--card:#fff;--ink:#12263f;--muted:#5b6b7a;--line:#d9e0e5;--marca:#2da484;--ok:#1b7a5e;--okbg:#e6f4ef;--warn:#7a4500;--warnbg:#fff4e0;--erro:#b3261e}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:640px;margin:0 auto;padding:16px 16px 48px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:14px;overflow:hidden}
+.faixa{height:6px;background:var(--marca);margin:-18px -18px 16px}
+.cab{display:flex;gap:14px;align-items:center}
+.logo{width:56px;height:56px;border-radius:12px;object-fit:contain;background:#fff;flex:none}
+.iniciais{width:56px;height:56px;border-radius:12px;background:var(--marca);color:#fff;display:grid;place-items:center;font-weight:700;font-size:21px;flex:none}
+h1{font-size:19px;margin:0}
+.muted{color:var(--muted);font-size:14px}
+.aviso{background:var(--warnbg);color:var(--warn);border:1px solid #f0c987;border-radius:10px;padding:10px 14px;font-size:14px;margin-bottom:14px}
+h2{font-size:15px;margin:0 0 10px}
+table{width:100%;border-collapse:collapse;font-size:15px}
+td{padding:8px 0;border-bottom:1px solid var(--line);vertical-align:top}
+td.v{text-align:right;white-space:nowrap;padding-left:12px}
+tr.sub td{border:0;padding:3px 0;color:var(--muted)}
+tr.total td{border:0;padding-top:10px;font-weight:800;font-size:19px}
+.fotos{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
+.fotos img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;border:1px solid var(--line)}
+.texto{white-space:pre-wrap;margin:0}
+.botoes{display:grid;gap:10px}
+button{font:inherit;font-weight:600;border-radius:12px;padding:14px;border:1px solid var(--line);background:#fff;color:var(--ink);cursor:pointer;min-height:52px}
+button.sim{background:var(--marca);border-color:var(--marca);color:#fff;font-size:17px}
+button.ligacao{border:0;background:none;color:var(--muted);text-decoration:underline;min-height:44px;font-weight:500}
+button:disabled{opacity:.6}
+textarea{width:100%;font:inherit;border:1px solid var(--line);border-radius:10px;padding:12px;min-height:96px}
+.estado{border-radius:12px;padding:14px;font-weight:600}
+.estado.ok{background:var(--okbg);color:var(--ok)}
+.estado.info{background:var(--warnbg);color:var(--warn)}
+.erro{color:var(--erro)}
+a{color:var(--ink)}
+footer{text-align:center;color:var(--muted);font-size:13px;margin-top:20px}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<main id="app"><p class="muted">A carregar o orçamento…</p></main>
+<script>
+(function () {
+  "use strict";
+  var SUPABASE = "https://oefqbkhioncakojipqyx.supabase.co";
+  var CHAVE = "sb_publishable__ZWyOuFclSHj0iRY3ejn_A_hiq_7JKC"; // chave pública (só chama as 2 funções)
+  var FOTOS = SUPABASE + "/storage/v1/object/public/orc-fotos/";
+  var app = document.getElementById("app");
+  var token = new URLSearchParams(location.search).get("o") || "";
+  var dados = null;
+
+  function el(tag, attrs, filhos) {
+    var e = document.createElement(tag);
+    if (attrs) for (var k in attrs) {
+      if (k === "texto") e.textContent = attrs[k];
+      else if (k === "classe") e.className = attrs[k];
+      else if (k.slice(0, 2) === "on") e.addEventListener(k.slice(2), attrs[k]);
+      else e.setAttribute(k, attrs[k]);
+    }
+    (filhos || []).forEach(function (f) { if (f) e.appendChild(typeof f === "string" ? document.createTextNode(f) : f); });
+    return e;
+  }
+  function eur(v) { return Number(v).toLocaleString("pt-PT", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €"; }
+  function cent(c) { return eur(c / 100); }
+  function qtd(q) { return Number(q).toLocaleString("pt-PT", { maximumFractionDigits: 2 }); }
+  function data(iso) { var p = String(iso).slice(0, 10).split("-"); return p[2] + "/" + p[1] + "/" + p[0]; }
+  function hora(iso) {
+    return new Date(iso).toLocaleString("pt-PT", { timeZone: "Europe/Lisbon", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  }
+  function meses(iso) {
+    var d = new Date(iso), a = new Date();
+    return (a.getFullYear() - d.getFullYear()) * 12 + a.getMonth() - d.getMonth();
+  }
+  function seguro(url) { return typeof url === "string" && url.indexOf(FOTOS) === 0 ? url : null; }
+  function cor(hex) { return /^#[0-9a-fA-F]{6}$/.test(hex || "") ? hex : "#2da484"; }
+
+  function rpc(nome, corpo) {
+    return fetch(SUPABASE + "/rest/v1/rpc/" + nome, {
+      method: "POST",
+      headers: { "apikey": CHAVE, "Content-Type": "application/json" },
+      body: JSON.stringify(corpo)
+    }).then(function (r) {
+      return r.json().then(function (j) {
+        if (!r.ok) { var e = new Error(j && j.message || "erro"); e.codigo = j && j.message; throw e; }
+        return j;
+      });
+    });
+  }
+
+  function erroPagina(titulo, texto) {
+    app.replaceChildren(el("div", { classe: "card" }, [el("h1", { texto: titulo }), el("p", { classe: "muted", texto: texto })]));
+  }
+
+  function desenhar() {
+    var d = dados, e = d.empresa;
+    document.documentElement.style.setProperty("--marca", cor(e.cor));
+    document.title = "Orçamento " + d.numero + " · " + e.nome;
+    var partes = [];
+
+    if (d.estado_fiscal !== "certificado") {
+      partes.push(el("div", { classe: "aviso", texto: "Proposta de orçamento sem validade fiscal (versão de teste, sem ATCUD). Não constitui fatura." }));
+    }
+
+    var logo = seguro(e.logo_url);
+    var iniciais = (e.nome || "?").trim().split(/\s+/).slice(0, 2).map(function (p) { return p[0].toUpperCase(); }).join("");
+    var m = meses(e.desde);
+    partes.push(el("div", { classe: "card" }, [
+      el("div", { classe: "faixa" }),
+      el("div", { classe: "cab" }, [
+        logo ? el("img", { classe: "logo", src: logo, alt: "Logótipo de " + e.nome }) : el("div", { classe: "iniciais", texto: iniciais }),
+        el("div", null, [
+          el("h1", { texto: e.nome }),
+          el("div", { classe: "muted", texto: [e.nif ? "NIF " + e.nif : "", e.telefone || ""].filter(Boolean).join(" · ") }),
+          el("div", { classe: "muted", texto: m < 1 ? "No Orçamento Rápido desde este mês · ainda sem avaliações" : "No Orçamento Rápido há " + m + (m === 1 ? " mês" : " meses") + " · ainda sem avaliações" })
+        ])
+      ])
+    ]));
+
+    var linhas = el("tbody");
+    d.linhas.forEach(function (l) {
+      var base = Math.round(l.quantidade * l.preco);
+      linhas.appendChild(el("tr", null, [
+        el("td", null, [el("div", { texto: l.descricao }), el("div", { classe: "muted", texto: qtd(l.quantidade) + " " + l.unidade + " × " + cent(l.preco) + " · IVA " + l.iva + " %" })]),
+        el("td", { classe: "v", texto: cent(base) })
+      ]));
+    });
+    linhas.appendChild(el("tr", { classe: "sub" }, [el("td", { texto: "Subtotal" }), el("td", { classe: "v", texto: eur(d.subtotal) })]));
+    linhas.appendChild(el("tr", { classe: "sub" }, [el("td", { texto: "IVA" }), el("td", { classe: "v", texto: eur(d.total_iva) })]));
+    linhas.appendChild(el("tr", { classe: "total" }, [el("td", { texto: "Total" }), el("td", { classe: "v", texto: eur(d.total) })]));
+    partes.push(el("div", { classe: "card" }, [
+      el("h2", { texto: "Orçamento " + d.numero + (d.versao > 1 ? " · versão " + d.versao : "") }),
+      el("div", { classe: "muted", texto: "Para " + d.cliente_nome + " · válido até " + data(d.validade) }),
+      el("table", null, [linhas])
+    ]));
+
+    var fotos = (d.fotos || []).map(seguro).filter(Boolean);
+    if (fotos.length) {
+      partes.push(el("div", { classe: "card" }, [el("h2", { texto: "Fotografias" }),
+        el("div", { classe: "fotos" }, fotos.map(function (u) { return el("a", { href: u, target: "_blank", rel: "noopener" }, [el("img", { src: u, alt: "Fotografia da obra", loading: "lazy" })]); }))]));
+    }
+    if (d.condicoes) partes.push(el("div", { classe: "card" }, [el("h2", { texto: "Condições de pagamento" }), el("p", { classe: "texto", texto: d.condicoes }),
+      el("p", { classe: "muted", texto: "O pagamento é combinado directamente com " + e.nome + "." })]));
+    if (d.notas) partes.push(el("div", { classe: "card" }, [el("h2", { texto: "Notas" }), el("p", { classe: "texto", texto: d.notas })]));
+
+    partes.push(blocoResposta());
+    partes.push(el("footer", { texto: "Enviado com Orçamento Rápido · Decisão Digital" }));
+    app.replaceChildren.apply(app, partes);
+  }
+
+  function blocoResposta() {
+    var d = dados;
+    if (d.estado === "aceite" || d.estado === "recusado") {
+      return el("div", { classe: "card" }, [el("div", { classe: "estado " + (d.estado === "aceite" ? "ok" : "info"),
+        texto: (d.estado === "aceite" ? "Aceitou este orçamento" : "Indicou que não vai avançar") + " a " + hora(d.respondido_em) + " (versão " + d.resposta_versao + ")." })]);
+    }
+    if (d.expirado) {
+      return el("div", { classe: "card" }, [el("div", { classe: "estado info", texto: "Este orçamento expirou a " + data(d.validade) + ". Peça um novo a " + d.empresa.nome + "." })]);
+    }
+    var aviso = el("p", { classe: "erro", hidden: "" });
+    var caixa = el("textarea", { placeholder: "Escreva a sua dúvida (opcional)", maxlength: "1000" });
+    var zonaDuvida = el("div", { hidden: "" }, [caixa, el("div", { style: "height:10px" }),
+      el("button", { texto: "Enviar dúvida", onclick: function () { responder("duvidas", caixa.value, this); } })]);
+    var filhos = [el("h2", { texto: "A sua resposta" })];
+    if (d.estado === "duvidas") filhos.push(el("div", { classe: "estado info", texto: "Enviou uma dúvida a " + hora(d.respondido_em) + ". Pode ainda aceitar ou responder outra vez." }), el("div", { style: "height:12px" }));
+    filhos.push(el("div", { classe: "botoes" }, [
+      el("button", { classe: "sim", texto: "Aceito", onclick: function () {
+        if (confirm("Confirma que aceita o orçamento " + d.numero + " no valor de " + eur(d.total) + "?")) responder("aceite", null, this);
+      } }),
+      el("button", { texto: "Tenho dúvidas", onclick: function () { zonaDuvida.hidden = false; caixa.focus(); } }),
+      zonaDuvida,
+      el("button", { classe: "ligacao", texto: "Não vou avançar", onclick: function () {
+        if (confirm("Confirma que não vai avançar com este orçamento?")) responder("recusado", null, this);
+      } }),
+      aviso
+    ]));
+    filhos.push(el("p", { classe: "muted", texto: "A sua resposta fica registada com a data, a hora e a versão do orçamento, e " + d.empresa.nome + " é avisado." }));
+    var bloco = el("div", { classe: "card" }, filhos);
+    bloco.aviso = aviso;
+    return bloco;
+  }
+
+  function responder(resposta, mensagem, botao) {
+    var aviso = botao.closest(".card").aviso;
+    botao.disabled = true;
+    rpc("orc_publico_responder", { p_token: token, p_resposta: resposta, p_versao: dados.versao, p_mensagem: mensagem || null })
+      .then(function (r) {
+        dados.estado = r.estado; dados.respondido_em = r.respondido_em; dados.resposta_versao = r.versao;
+        desenhar();
+        window.scrollTo(0, document.body.scrollHeight);
+      })
+      .catch(function (e) {
+        botao.disabled = false;
+        var t = { versao_desatualizada: "O orçamento foi actualizado entretanto. A página vai recarregar com a versão nova.",
+          orcamento_expirado: "Este orçamento já expirou.", ja_respondido: "Este orçamento já tinha resposta." }[e.codigo];
+        aviso.textContent = t || "Não foi possível enviar a resposta. Verifique a ligação à internet e tente outra vez.";
+        aviso.hidden = false;
+        if (e.codigo === "versao_desatualizada" || e.codigo === "ja_respondido") setTimeout(carregar, 2500);
+      });
+  }
+
+  function carregar() {
+    if (!/^[A-Za-z0-9]{20,64}$/.test(token)) return erroPagina("Ligação incompleta", "Abra a ligação completa que recebeu por WhatsApp.");
+    rpc("orc_publico_ver", { p_token: token })
+      .then(function (d) { dados = d; desenhar(); })
+      .catch(function (e) {
+        if (e.codigo === "orcamento_inexistente") erroPagina("Orçamento não encontrado", "A ligação pode estar incompleta. Peça-a outra vez a quem lha enviou.");
+        else erroPagina("Sem ligação", "Não foi possível abrir o orçamento. Verifique a internet e recarregue a página.");
+      });
+  }
+  carregar();
+})();
+</script>
+</body>
+</html>
