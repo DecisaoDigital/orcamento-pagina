@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Obra feita — orçamentos no telemóvel</title>
+<meta name="description" content="Faça o orçamento na obra, a falar, e envie-o ao cliente por WhatsApp. Descarregue a aplicação Obra feita para Android.">
+<meta name="robots" content="noindex">
+<style>
+:root{--castanho:#5a3418;--verde:#2da484;--fundo:#fbf8f4;--texto:#2b2118;--suave:#6e6258;--cartao:#fff;--linha:#e8dfd5}
+@media (prefers-color-scheme:dark){:root{--fundo:#1c1612;--texto:#f3ece4;--suave:#b5a899;--cartao:#27201a;--linha:#3a2f26;--castanho:#e9c9a6}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--fundo);color:var(--texto);font:18px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:600px;margin:0 auto;padding:28px 16px 48px}
+.logo{display:block;width:clamp(190px,44vw,260px);height:auto;margin:0 auto 14px;background:#fbf8f4;border-radius:28px;padding:8px}
+.ola{text-align:center;font-size:17px;letter-spacing:.04em;text-transform:uppercase;color:var(--suave);margin:0}
+h1{font-size:30px;line-height:1.15;text-align:center;margin:8px 0 12px;color:var(--castanho)}
+.sub{text-align:center;color:var(--suave);margin:0 0 28px}
+.botao{display:block;width:100%;max-width:340px;margin:0 auto;text-align:center;background:var(--verde);color:#fff;font-weight:700;font-size:20px;text-decoration:none;padding:16px 20px;border-radius:14px;box-shadow:0 2px 0 rgba(0,0,0,.15)}
+.botao small{display:block;font-size:26px;font-weight:800;margin-top:2px}
+.botao:active{transform:translateY(1px)}
+.nota{text-align:center;color:var(--suave);font-size:15px;margin:10px 0 0}
+section{margin-top:36px}
+h2{font-size:21px;margin:0 0 12px;color:var(--castanho)}
+ul.vantagens{list-style:none;padding:0;margin:0;display:grid;gap:12px}
+ul.vantagens li{background:var(--cartao);border:1px solid var(--linha);border-radius:12px;padding:14px 16px}
+ul.vantagens b{display:block}
+ol.passos{padding:0;margin:0;list-style:none;counter-reset:p;display:grid;gap:12px}
+ol.passos li{counter-increment:p;background:var(--cartao);border:1px solid var(--linha);border-radius:12px;padding:14px 16px 14px 56px;position:relative}
+ol.passos li::before{content:counter(p);position:absolute;left:14px;top:12px;width:30px;height:30px;border-radius:50%;background:var(--castanho);color:var(--fundo);display:grid;place-items:center;font-weight:700}
+.aviso{background:var(--cartao);border-left:4px solid var(--verde);padding:12px 14px;border-radius:8px;font-size:16px;color:var(--suave)}
+.aviso-teste{max-width:480px;margin:18px auto 0;color:var(--texto)}
+.aviso-teste ul{margin:8px 0 0;padding-left:20px}
+.aviso-teste li{margin:4px 0}
+footer{margin-top:40px;text-align:center;color:var(--suave);font-size:14px}
+a{color:inherit}
+</style>
+</head>
+<body>
+<main>
+  <img class="logo" src="logo.png" alt="Obra feita" width="260" height="260">
+  <p class="ola">Bem-vindo à Obra feita</p>
+  <h1>Vai descarregar a aplicação que lhe faz os orçamentos</h1>
+  <p class="sub">Orçamentos limpos, sem esforço. Responda às perguntas com a voz, na própria obra. A aplicação trata do resto e o orçamento segue para o cliente por WhatsApp.</p>
+
+  <a class="botao" href="https://github.com/DecisaoDigital/orcamento-pagina/releases/download/obra-feita-v0.3.8/ObraFeita_v0.3.8.apk" download>Descarregar a aplicação<small>Obra feita</small></a>
+  <p class="nota">Para telemóveis Android · experimente grátis</p>
+  <div class="aviso aviso-teste">
+    <b>Pode instalar com confiança.</b>
+    <ul>
+      <li>Não danifica o telemóvel e não contém vírus nem código malicioso.</li>
+      <li>Não tem acesso a pagamentos nem a dados bancários, e não apaga nem altera os seus ficheiros.</li>
+      <li>Só pede as permissões de que precisa (por exemplo, o microfone para falar e a câmara para as fotos).</li>
+      <li>Pode analisá-la com o seu antivírus ou pedir a alguém da sua confiança que a verifique. Convidamo-lo a fazê-lo.</li>
+    </ul>
+    <p style="margin:14px 0 0"><b>Porque aparece então um aviso de segurança da Google?</b></p>
+    <p style="margin:4px 0 0">Porque a aplicação ainda não está na loja Play Store, e estamos a tratar disso. O aviso refere-se a isso, não à aplicação em si.</p>
+  </div>
+
+  <section>
+    <h2>O que faz por si</h2>
+    <ul class="vantagens">
+      <li><b>Fala em vez de escrever</b>Uma pergunta de cada vez, letra grande. Responde com a voz ou com um toque.</li>
+      <li><b>Documento profissional</b>Com o seu logótipo e as suas cores, pronto a imprimir ou a enviar.</li>
+      <li><b>Sai do seu número</b>O orçamento vai por WhatsApp do seu próprio telemóvel, não de uma plataforma.</li>
+      <li><b>O cliente decide com um toque</b>Aceito, preciso de pensar ou não aceito. Vê quando ele abriu.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Instalar em 3 passos</h2>
+    <ol class="passos">
+      <li><b>Descarregue</b> o ficheiro com o botão verde acima.</li>
+      <li><b>Abra-o</b> e, se o telemóvel perguntar, toque em «Permitir desta fonte».</li>
+      <li><b>Instale</b> e abra a Obra feita. Escolha a sua profissão e faça um orçamento de teste.</li>
+    </ol>
+    <p class="aviso" style="margin-top:14px">Pode aparecer um aviso do Google Play Protect. É normal em aplicações que ainda não estão na loja: toque em «Mais detalhes» e depois em «Instalar mesmo assim».</p>
+  </section>
+
+  <p class="nota" style="margin-top:28px;font-size:13px;word-break:break-all">Versão 0.3.8 · impressão digital SHA-256 do ficheiro:<br>89d9a16c917ddda55f0e991d68dbf18b9b0ff9401970b964fea1011cba3ce2d1</p>
+  <footer>Obra feita é um produto da Decisão Digital.<br>Dúvidas? Responda à mensagem do César Mendes.</footer>
+</main>
+</body>
+</html>
