@@ -37,6 +37,7 @@ button.nao{color:var(--erro)}
 .resp{padding:10px 0;border-top:1px solid var(--line)}
 .resp:first-of-type{margin-top:10px}
 button:disabled{opacity:.6}
+.btn-aval{display:block;text-align:center;text-decoration:none;font-weight:600;border-radius:12px;padding:14px;border:1px solid var(--line);background:#fff;color:var(--ink);min-height:52px;margin-top:10px}
 .estado{border-radius:12px;padding:14px;font-weight:600}
 .estado.ok{background:var(--okbg);color:var(--ok)}
 .estado.info{background:var(--warnbg);color:var(--warn)}
@@ -170,8 +171,12 @@ footer{text-align:center;color:var(--muted);font-size:13px;margin-top:20px}
   function blocoResposta() {
     var d = dados;
     if (d.estado === "aceite" || d.estado === "recusado") {
-      return el("div", { classe: "card" }, [el("div", { classe: "estado " + (d.estado === "aceite" ? "ok" : "info"),
-        texto: (d.estado === "aceite" ? "Aceitou este orçamento" : "Respondeu que não aceita este orçamento") + " a " + hora(d.respondido_em) + "." })]);
+      var fs = [el("div", { classe: "estado " + (d.estado === "aceite" ? "ok" : "info"),
+        texto: (d.estado === "aceite" ? "Aceitou este orçamento" : "Respondeu que não aceita este orçamento") + " a " + hora(d.respondido_em) + "." })];
+      // Depois de aceite, o cliente chega à página de avaliação (mesmo token).
+      if (d.estado === "aceite") fs.push(el("p", { classe: "muted", texto: "Quando a obra estiver concluída, pode contar como correu." }),
+        el("a", { href: "avaliar.html?o=" + encodeURIComponent(token), classe: "btn-aval", texto: "Avaliar o trabalho" }));
+      return el("div", { classe: "card" }, fs);
     }
     if (d.expirado) {
       return el("div", { classe: "card" }, [el("div", { classe: "estado info", texto: "Este orçamento expirou a " + data(d.validade) + ". Peça um novo a " + d.empresa.nome + "." })]);

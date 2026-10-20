@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<title>Avaliar o trabalho</title>
+<style>
+/* Página de avaliação aberta pelo cliente (ligação ?o=<token> do orçamento).
+   Sem bibliotecas nem fontes externas. Só chama duas funções públicas do Supabase. */
+:root{--fundo:#f3efe9;--cartao:#fff;--tinta:#2a1d12;--suave:#6b5d50;--linha:#e3d9cc;--of:#5a3418;--creme:#fbf5ec;--ouro:#c8902c;--erro:#a5431c;--ok:#1d7a52;--okbg:#e5f3ec;color-scheme:light}
+@media (prefers-color-scheme: dark){:root{--fundo:#1a1512;--cartao:#251e19;--tinta:#f1e8dd;--suave:#b6a796;--linha:#3a3029;--of:#d9a877;--creme:#2e241d;--erro:#f0956d;--ok:#5fcb97;--okbg:#173327;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--fundo);color:var(--tinta);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:20px 16px 60px}
+main{max-width:480px;margin:0 auto;display:grid;gap:14px}
+.topo{background:#5a3418;color:#fbf5ec;border-radius:16px;padding:18px;display:flex;gap:12px;align-items:center}
+.logo{width:52px;height:52px;border-radius:12px;background:#fbf5ec;color:#5a3418;display:grid;place-items:center;font-weight:800;font-size:19px;flex:none}
+.topo h1{margin:0;font-size:20px;line-height:1.15;overflow-wrap:anywhere}
+.rede{font-size:13px;opacity:.85}
+.cartao{background:var(--cartao);border:1px solid var(--linha);border-radius:16px;padding:16px 18px;display:grid;gap:10px}
+.cartao h2{margin:0;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--of)}
+p{margin:0}
+.muted{color:var(--suave);font-size:14px}
+.q{display:grid;gap:8px;padding-top:12px;border-top:1px solid var(--linha)}
+.q:first-of-type{border-top:0;padding-top:0}
+.q .t{font-weight:700;font-size:15.5px}
+.q .n{color:var(--of);font-weight:800;margin-right:4px}
+.opts{display:flex;flex-wrap:wrap;gap:8px}
+.opts button{font-weight:600;font-size:14px;font-family:inherit;padding:9px 14px;border-radius:12px;border:1.5px solid var(--linha);background:var(--cartao);color:var(--tinta);cursor:pointer;min-height:44px;min-width:64px}
+.opts button[aria-pressed="true"]{background:var(--of);border-color:var(--of);color:var(--creme)}
+button:focus-visible,textarea:focus-visible{outline:3px solid var(--ouro);outline-offset:2px}
+.est-in{display:flex;gap:2px}
+.est-in button{font-size:34px;line-height:1;background:none;border:0;padding:2px 5px;min-width:44px;min-height:44px;cursor:pointer;color:var(--linha)}
+.est-in button.on{color:var(--ouro)}
+.escala{display:flex;justify-content:space-between;font-size:12px;color:var(--suave);max-width:240px}
+textarea{width:100%;min-height:96px;font-size:15px;line-height:1.45;font-family:inherit;padding:10px 12px;border-radius:12px;border:1.5px solid var(--linha);background:var(--cartao);color:var(--tinta);resize:vertical}
+.conta{font-size:12.5px;color:var(--suave)}
+.erro{color:var(--erro);font-size:14px;font-weight:600}
+.enviar{font-weight:800;font-size:17px;font-family:inherit;padding:15px;border-radius:14px;border:0;background:var(--of);color:var(--creme);cursor:pointer;min-height:54px;width:100%}
+.enviar:disabled{opacity:.6}
+.ok{background:var(--okbg);color:var(--ok);border-radius:14px;padding:16px;font-weight:700}
+.info{background:var(--cartao);border:1px solid var(--linha);border-radius:14px;padding:14px;color:var(--tinta)}
+footer{text-align:center;font-size:12.5px;color:var(--suave)}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<main id="app"><p class="muted">A carregar…</p></main>
+<script>
+(function () {
+  "use strict";
+  var SUPABASE = "https://oefqbkhioncakojipqyx.supabase.co";
+  var CHAVE = "sb_publishable__ZWyOuFclSHj0iRY3ejn_A_hiq_7JKC"; // chave pública (só chama 2 funções)
+  var app = document.getElementById("app");
+  var token = new URLSearchParams(location.search).get("o") || "";
+  var dados = null;
+  var estado = {};
+
+  // [chave, pergunta, tipo, opções]
+  var PERGUNTAS = [
+    ["cumpriu", "Cumpriu o combinado? (o que estava no orçamento, o valor e o prazo)", "botoes", [["sim", "Sim"], ["quase", "Quase"], ["nao", "Não"]]],
+    ["recomenda", "Recomendaria a um amigo ou vizinho?", "botoes", [["sim", "Sim"], ["talvez", "Talvez"], ["nao", "Não"]]],
+    ["outra_obra", "Confiaria outra obra a este empreiteiro?", "botoes", [["sim", "Sim"], ["nao", "Não"]]],
+    ["confianca", "Sentiu confiança neste profissional desde o início, quando recebeu o orçamento?", "estrelas", ["Nenhuma", "Total"]],
+    ["honestidade", "Achou o profissional honesto? Que sensação de honestidade teve com o orçamento?", "estrelas", ["Nada", "Muito"]],
+    ["satisfacao", "Ficou satisfeito com o resultado final?", "estrelas", ["Nada", "Muito"]],
+    ["trato", "Foi pontual, educado e explicou bem o que ia fazer?", "estrelas", ["Nada", "Muito"]]
+  ];
+
+  function el(tag, attrs, filhos) {
+    var e = document.createElement(tag);
+    if (attrs) for (var k in attrs) {
+      if (k === "texto") e.textContent = attrs[k];
+      else if (k === "classe") e.className = attrs[k];
+      else if (k.slice(0, 2) === "on") e.addEventListener(k.slice(2), attrs[k]);
+      else e.setAttribute(k, attrs[k]);
+    }
+    (filhos || []).forEach(function (f) { if (f) e.appendChild(typeof f === "string" ? document.createTextNode(f) : f); });
+    return e;
+  }
+  function rpc(nome, corpo) {
+    return fetch(SUPABASE + "/rest/v1/rpc/" + nome, {
+      method: "POST",
+      headers: { "apikey": CHAVE, "Content-Type": "application/json" },
+      body: JSON.stringify(corpo)
+    }).then(function (r) {
+      return r.json().then(function (j) {
+        if (!r.ok) { var e = new Error(j && j.message || "erro"); e.codigo = j && j.message; throw e; }
+        return j;
+      }, function () { throw new Error("resposta inválida"); });
+    });
+  }
+  function letras(s) { return (s.match(/[A-Za-zÀ-ÖØ-öø-ÿ]/g) || []).length; }
+  function rodape() { return el("footer", null, [el("div", { texto: "Enviado com Obra feita · Decisão Digital" })]); }
+  function cartaoMsg(titulo, texto) {
+    app.replaceChildren(el("div", { classe: "cartao" }, [el("h2", { texto: titulo }), el("p", { texto: texto })]), rodape());
+  }
+
+  function topo() {
+    var ini = (dados.empresa_nome || "?").trim().split(/\s+/).slice(0, 2).map(function (p) { return p[0].toUpperCase(); }).join("");
+    return el("section", { classe: "topo" }, [el("div", { classe: "logo", "aria-hidden": "true", texto: ini }),
+      el("div", null, [el("h1", { texto: dados.empresa_nome }), el("div", { classe: "rede", texto: "Uma empresa da rede Obra feita" })])]);
+  }
+
+  function desenhar() {
+    document.title = "Avaliar · " + dados.empresa_nome;
+    var partes = [topo()];
+    if (!dados.pode_avaliar) {
+      partes.push(el("div", { classe: "cartao" }, [el("h2", { texto: "Avaliação" }),
+        el("p", { texto: "Poderá avaliar quando a obra estiver concluída." }),
+        el("p", { classe: "muted", texto: "Só podem avaliar clientes com o orçamento aceite." })]), rodape());
+      return app.replaceChildren.apply(app, partes);
+    }
+    partes.push(el("div", { classe: "cartao" }, [el("h2", { texto: "Como funciona" }),
+      el("p", { texto: "Diga o que correu bem e o que correu mal. " + dados.empresa_nome + " recebe primeiro a sua avaliação e tem tempo para resolver." }),
+      el("p", { classe: "muted", texto: "Só avaliam clientes com orçamento aceite. A avaliação fica publicada ao fim de 7 dias, seja boa ou má." })]));
+
+    var form = el("form", { classe: "cartao", novalidate: "" });
+    form.appendChild(el("h2", { texto: "Avaliar o trabalho · orçamento " + dados.numero }));
+    form.appendChild(el("p", { classe: "muted", texto: [dados.trabalho, dados.morada_obra].filter(Boolean).join(" · ") }));
+    if (dados.ja_avaliou) form.appendChild(el("div", { classe: "info", texto: "Já avaliou este trabalho. Se enviar de novo, conta a avaliação mais recente." }));
+    PERGUNTAS.forEach(function (p, i) { form.appendChild(pergunta(p, i + 1)); });
+
+    var com = el("textarea", { id: "coment", rows: "4", maxlength: "2000", "aria-describedby": "conta", placeholder: "Por exemplo: veio no dia combinado, explicou tudo e deixou a cozinha limpa." });
+    var conta = el("div", { classe: "conta", id: "conta", texto: "Obrigatório · pelo menos 20 letras" });
+    var erro = el("p", { classe: "erro", hidden: "", role: "alert" });
+    var enviar = el("button", { classe: "enviar", type: "submit", texto: "Enviar avaliação" });
+    function contar() {
+      var n = letras(com.value);
+      conta.textContent = n >= 20 ? "Obrigado pelo comentário." : "Obrigatório · faltam " + (20 - n) + " letras";
+      erro.hidden = true;
+    }
+    com.addEventListener("input", contar);
+    form.appendChild(el("div", { classe: "q" }, [
+      el("label", { classe: "t", for: "coment" }, [el("span", { classe: "n", texto: String(PERGUNTAS.length + 1) }), "Conte em poucas palavras como correu"]), com, conta]));
+    form.appendChild(erro);
+    form.appendChild(enviar);
+    form.appendChild(el("p", { classe: "muted", style: "text-align:center", texto: dados.empresa_nome + " recebe a sua avaliação primeiro. Pode mudá-la mais tarde, abrindo esta ligação outra vez." }));
+
+    form.addEventListener("submit", function (ev) {
+      ev.preventDefault();
+      var falta = PERGUNTAS.filter(function (p) { return estado[p[0]] === undefined; }).length;
+      var n = letras(com.value);
+      if (falta || n < 20) {
+        erro.textContent = (falta ? "Falta responder a " + falta + (falta === 1 ? " pergunta. " : " perguntas. ") : "") + (n < 20 ? "O comentário precisa de pelo menos 20 letras." : "");
+        erro.hidden = false; return;
+      }
+      enviar.disabled = true;
+      rpc("orc_publico_avaliar", {
+        p_token: token, p_cumpriu: estado.cumpriu, p_recomenda: estado.recomenda, p_outra_obra: estado.outra_obra,
+        p_confianca: estado.confianca, p_honestidade: estado.honestidade, p_satisfacao: estado.satisfacao,
+        p_trato: estado.trato, p_comentario: com.value
+      }).then(function () {
+        app.replaceChildren(topo(), el("div", { classe: "ok", role: "status", texto: "Obrigado. A sua avaliação foi enviada a " + dados.empresa_nome + " e fica publicada daqui a 7 dias." }), rodape());
+        window.scrollTo(0, 0);
+      }).catch(function (e) {
+        enviar.disabled = false;
+        var t = { orcamento_nao_aceite: "Só se pode avaliar depois de o orçamento ser aceite.",
+          comentario_curto: "O comentário precisa de pelo menos 20 letras.", comentario_longo: "O comentário é demasiado longo (máximo 2000 caracteres).",
+          muitas_tentativas: "Já enviou avaliações há pouco. Aguarde um momento e tente outra vez.",
+          avaliacao_invalida: "Alguma resposta não é válida. Confira-as e tente outra vez.",
+          orcamento_inexistente: "A ligação está incompleta. Peça-a outra vez a quem lha enviou." }[e.codigo];
+        erro.textContent = t || "Não foi possível enviar a avaliação. Verifique a ligação à internet e tente outra vez.";
+        erro.hidden = false;
+      });
+    });
+    partes.push(form, rodape());
+    app.replaceChildren.apply(app, partes);
+  }
+
+  function pergunta(p, num) {
+    var chave = p[0], id = "l" + num;
+    var q = el("div", { classe: "q" }, [el("div", { classe: "t", id: id }, [el("span", { classe: "n", texto: String(num) }), p[1]])]);
+    if (p[2] === "botoes") {
+      var g = el("div", { classe: "opts", role: "group", "aria-labelledby": id });
+      p[3].forEach(function (o) {
+        var b = el("button", { type: "button", "aria-pressed": "false", texto: o[1] });
+        b.addEventListener("click", function () {
+          g.querySelectorAll("button").forEach(function (x) { x.setAttribute("aria-pressed", "false"); });
+          b.setAttribute("aria-pressed", "true"); estado[chave] = o[0];
+        });
+        g.appendChild(b);
+      });
+      q.appendChild(g);
+    } else {
+      var s = el("div", { classe: "est-in", role: "radiogroup", "aria-labelledby": id });
+      for (var i = 1; i <= 5; i++) (function (n) {
+        var b = el("button", { type: "button", role: "radio", "aria-checked": "false", "aria-label": n + (n === 1 ? " estrela" : " estrelas"), texto: "★" });
+        b.addEventListener("click", function () {
+          estado[chave] = n;
+          s.querySelectorAll("button").forEach(function (x, k) { x.classList.toggle("on", k < n); x.setAttribute("aria-checked", String(k + 1 === n)); });
+        });
+        s.appendChild(b);
+      })(i);
+      q.appendChild(s);
+      q.appendChild(el("div", { classe: "escala" }, [el("span", { texto: p[3][0] }), el("span", { texto: p[3][1] })]));
+    }
+    return q;
+  }
+
+  if (!/^[A-Za-z0-9]{20,64}$/.test(token)) { cartaoMsg("Ligação incompleta", "Abra a ligação completa que recebeu por WhatsApp."); return; }
+  rpc("orc_publico_avaliar_ver", { p_token: token })
+    .then(function (d) { dados = d; desenhar(); })
+    .catch(function (e) {
+      if (e.codigo === "orcamento_inexistente") cartaoMsg("Orçamento não encontrado", "A ligação pode estar incompleta. Peça-a outra vez a quem lha enviou.");
+      else cartaoMsg("Sem ligação", "Não foi possível abrir a página. Verifique a internet e recarregue.");
+    });
+})();
+</script>
+</body>
+</html>
