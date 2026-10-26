@@ -114,7 +114,7 @@ footer{text-align:center;font-size:12.5px;color:var(--suave)}
     }
     partes.push(el("div", { classe: "cartao" }, [el("h2", { texto: "Como funciona" }),
       el("p", { texto: "Diga o que correu bem e o que correu mal. " + dados.empresa_nome + " recebe primeiro a sua avaliação e tem tempo para resolver." }),
-      el("p", { classe: "muted", texto: "Só avaliam clientes com orçamento aceite. A avaliação fica publicada ao fim de 7 dias, seja boa ou má." })]));
+      el("p", { classe: "muted", texto: "Só avaliam clientes com orçamento aceite. A avaliação fica visível para o profissional ao fim de 7 dias, seja boa ou má." })]));
 
     var form = el("form", { classe: "cartao", novalidate: "" });
     form.appendChild(el("h2", { texto: "Avaliar o trabalho · orçamento " + dados.numero }));
@@ -137,6 +137,10 @@ footer{text-align:center;font-size:12.5px;color:var(--suave)}
     form.appendChild(erro);
     form.appendChild(enviar);
     form.appendChild(el("p", { classe: "muted", style: "text-align:center", texto: dados.empresa_nome + " recebe a sua avaliação primeiro. Pode mudá-la mais tarde, abrindo esta ligação outra vez." }));
+    form.appendChild(el("p", { classe: "muted", style: "text-align:center" }, [
+      "Os seus dados: a Decisão Digital (Obra feita) guarda esta avaliação ligada ao orçamento, mostra-a a " + dados.empresa_nome + " e usa-a para avaliar a qualidade dos profissionais da rede. ",
+      el("a", { style: "color:inherit", href: "https://decisaodigital.github.io/orcamento-pagina/privacidade.html#clientes", texto: "Política de privacidade" }),
+      " · ", el("a", { style: "color:inherit", href: "mailto:geral@decisaodigital.pt", texto: "geral@decisaodigital.pt" })]));
 
     form.addEventListener("submit", function (ev) {
       ev.preventDefault();
@@ -152,7 +156,7 @@ footer{text-align:center;font-size:12.5px;color:var(--suave)}
         p_confianca: estado.confianca, p_honestidade: estado.honestidade, p_satisfacao: estado.satisfacao,
         p_trato: estado.trato, p_comentario: com.value
       }).then(function () {
-        app.replaceChildren(topo(), el("div", { classe: "ok", role: "status", texto: "Obrigado. A sua avaliação foi enviada a " + dados.empresa_nome + " e fica publicada daqui a 7 dias." }), rodape());
+        app.replaceChildren(topo(), el("div", { classe: "ok", role: "status", texto: "Obrigado. A sua avaliação foi enviada a " + dados.empresa_nome + " e fica visível para ele daqui a 7 dias." }), rodape());
         window.scrollTo(0, 0);
       }).catch(function (e) {
         enviar.disabled = false;

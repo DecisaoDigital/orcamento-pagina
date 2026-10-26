@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<title>Eliminar a conta Obra feita</title>
+<style>
+/* Página de pedido de eliminação de conta (exigência da Google Play). Estática: sem scripts, sem bibliotecas nem fontes externas. */
+:root{--fundo:#f3efe9;--cartao:#fff;--tinta:#2a1d12;--suave:#6b5d50;--linha:#e3d9cc;--of:#5a3418;--creme:#fbf5ec;--ouro:#c8902c;--erro:#a5431c;--erro-bg:#f8e9e2;color-scheme:light}
+@media (prefers-color-scheme: dark){:root{--fundo:#1a1512;--cartao:#251e19;--tinta:#f1e8dd;--suave:#b6a796;--linha:#3a3029;--of:#d9a877;--creme:#2e241d;--erro:#f0956d;--erro-bg:#3a2218;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--fundo);color:var(--tinta);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:20px 16px 60px}
+main{max-width:480px;margin:0 auto;display:grid;gap:14px}
+.topo{background:#5a3418;color:#fbf5ec;border-radius:16px;padding:18px;display:flex;gap:12px;align-items:center}
+.logo{width:52px;height:52px;border-radius:12px;background:#fbf5ec;color:#5a3418;display:grid;place-items:center;font-weight:800;font-size:19px;flex:none}
+.topo h1{margin:0;font-size:20px;line-height:1.15}
+.cartao{background:var(--cartao);border:1px solid var(--linha);border-radius:16px;padding:16px 18px;display:grid;gap:10px}
+.cartao h2{margin:0;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--of)}
+p,ol,ul{margin:0}
+ol,ul{padding-left:22px;display:grid;gap:6px}
+.muted{color:var(--suave);font-size:14px}
+.aviso{background:var(--erro-bg);color:var(--erro);border-radius:14px;padding:14px;font-weight:700}
+.confirmar{background:#fff3b0;color:#4a3b00;font-weight:800;padding:1px 6px;border-radius:6px}
+.botao{display:flex;align-items:center;justify-content:center;font-weight:800;font-size:17px;padding:15px;border-radius:14px;background:var(--of);color:var(--creme);text-decoration:none;min-height:58px;text-align:center}
+a:focus-visible{outline:3px solid var(--ouro);outline-offset:2px}
+footer{text-align:center;font-size:12.5px;color:var(--suave)}
+</style>
+</head>
+<body>
+<main>
+  <div class="topo"><div class="logo" aria-hidden="true">OF</div><h1>Eliminar a conta e os dados da Obra feita</h1></div>
+
+  <p class="aviso">A eliminação não se pode desfazer.</p>
+
+  <section class="cartao">
+    <h2>O que se apaga</h2>
+    <ul>
+      <li>A sua conta da Obra feita e os dados da empresa (nome, NIF, contactos, logótipo).</li>
+      <li>Todos os orçamentos enviados. As páginas dos orçamentos deixam de abrir.</li>
+      <li>As fotografias dos orçamentos.</li>
+      <li>As respostas e as avaliações dos seus clientes.</li>
+      <li>A aceitação dos termos de utilização.</li>
+    </ul>
+    <p class="muted">Ficam apenas os documentos de faturação da mensalidade, que a lei obriga a guardar. O email com que entra pode servir outras aplicações da Decisão Digital; essas não são afectadas.</p>
+  </section>
+
+  <section class="cartao">
+    <h2>Se ainda tem a aplicação</h2>
+    <ol>
+      <li>Abra a Obra feita e entre na sua conta.</li>
+      <li>No ecrã inicial, toque no menu (os três pontos) e em <b>Definições</b>.</li>
+      <li>No fim, toque em <b>Eliminar conta e dados</b>.</li>
+      <li>Leia o que se apaga, escreva <b>APAGAR</b> e toque em <b>Eliminar conta e dados</b>.</li>
+    </ol>
+    <p class="muted">Precisa de internet. A aplicação só diz que apagou depois de o servidor o confirmar.</p>
+  </section>
+
+  <section class="cartao">
+    <h2>Se já não tem a aplicação</h2>
+    <p>Peça a eliminação por mensagem. A partir do email ligado à conta, escreva com o assunto <b>«Eliminar conta Obra feita»</b> e indique o email com que entrava na aplicação.</p>
+    <p>Email: <b>geral@decisaodigital.pt</b></p>
+    <a class="botao" href="mailto:geral@decisaodigital.pt?subject=Eliminar%20conta%20Obra%20feita&amp;body=O%20meu%20email%20de%20acesso%20%C3%A9%3A%20">Pedir por email</a>
+    <p class="muted">Confirmamos que o pedido é seu e apagamos tudo em até 30 dias.</p>
+  </section>
+
+  <p class="muted">Como tratamos os seus dados: política de privacidade da Obra feita, secção «Eliminar a minha conta e dados».</p>
+  <footer>Obra feita é um produto da Decisão Digital.</footer>
+</main>
+</body>
+</html>
